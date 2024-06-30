@@ -3,6 +3,8 @@ package sondev.indentityservice.service;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import sondev.indentityservice.dto.request.UserCreationRequest;
 import sondev.indentityservice.dto.request.UserUpdateRequest;
@@ -29,6 +31,8 @@ public class UserService {
 
         // Map data from UserCreationRequest to User with userMapper
         User user = userMapper.toUser(request);
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         // Save User into Database
         // Return User was created successful
         return userRepository.save(user);
