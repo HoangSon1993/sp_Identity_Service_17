@@ -10,12 +10,15 @@ import sondev.indentityservice.dto.request.UserCreationRequest;
 import sondev.indentityservice.dto.request.UserUpdateRequest;
 import sondev.indentityservice.dto.response.UserResponse;
 import sondev.indentityservice.entity.User;
+import sondev.indentityservice.enums.Role;
 import sondev.indentityservice.exception.AppException;
 import sondev.indentityservice.exception.ErrorCode;
 import sondev.indentityservice.mapper.UserMapper;
 import sondev.indentityservice.repository.UserRepository;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,24 +26,32 @@ import java.util.List;
 public class UserService {
     UserRepository userRepository;
     UserMapper userMapper;
+    PasswordEncoder passwordEncoder;
 
-    public User createUser(UserCreationRequest request) {
+    public UserResponse createUser(UserCreationRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
 
         // Map data from UserCreationRequest to User with userMapper
         User user = userMapper.toUser(request);
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        // Create Role Default = USER
+        HashSet<String> roles = new HashSet<>();
+        roles.add(Role.USER.name());
+        user.setRoles(roles);
+
         // Save User into Database
         // Return User was created successful
-        return userRepository.save(user);
+        return userMapper.toUserResponse(userRepository.save(user));
     }
 
-    public List<User> getUsers() {
+    public List<UserResponse> getUsers() {
         // return all User in the Database
-        return userRepository.findAll();
+        List<User> users =userRepository.findAll();
+        return users.stream().map(userMapper::toUserResponse).collect(Collectors.toList());
     }
 
     public UserResponse getUser(String userId) {

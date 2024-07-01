@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import sondev.indentityservice.dto.request.UserCreationRequest;
 import sondev.indentityservice.dto.request.UserUpdateRequest;
@@ -23,18 +24,20 @@ public class UserController {
     UserService userService;
 
     @PostMapping
-    public ApiResponse<User> createUser(@RequestBody @Valid UserCreationRequest request) {
+    public ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreationRequest request) {
         var result = userService.createUser(request);
-        ApiResponse<User> apiResponse = ApiResponse.<User>builder()
+        ApiResponse<UserResponse> apiResponse = ApiResponse.<UserResponse>builder()
                 .result(result)
                 .build();
         return apiResponse;
     }
 
     @GetMapping
-    public ApiResponse<List<User>> getUsers() {
+    public ApiResponse<List<UserResponse>> getUsers() {
+        //Lấy thông tin User đang đăng nhập
+        var authentication = SecurityContextHolder.getContext();
         var result =userService.getUsers();
-        ApiResponse<List<User>> apiResponse = ApiResponse.<List<User>>builder()
+        ApiResponse<List<UserResponse>> apiResponse = ApiResponse.<List<UserResponse>>builder()
                 .result(result)
                 .build();
         return apiResponse;
