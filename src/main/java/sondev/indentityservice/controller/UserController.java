@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import sondev.indentityservice.dto.request.UserCreationRequest;
@@ -36,12 +37,13 @@ public class UserController {
     public ApiResponse<List<UserResponse>> getUsers() {
         //Lấy thông tin User đang đăng nhập
         var authentication = SecurityContextHolder.getContext();
-        var result =userService.getUsers();
+        var result = userService.getUsers();
         ApiResponse<List<UserResponse>> apiResponse = ApiResponse.<List<UserResponse>>builder()
                 .result(result)
                 .build();
         return apiResponse;
     }
+
 
     @GetMapping("/{userId}")
     public ApiResponse<UserResponse> getUser(@PathVariable String userId) {
@@ -50,6 +52,13 @@ public class UserController {
                 .result(result)
                 .build();
         return apiResponse;
+    }
+
+    @GetMapping("/myInfo")
+    public ApiResponse<UserResponse> getInfo(){
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.getMyInfo())
+                .build();
     }
 
     @PutMapping("/{userId}")

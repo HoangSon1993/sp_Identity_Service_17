@@ -3,7 +3,10 @@ package sondev.indentityservice.service;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import sondev.indentityservice.dto.request.UserCreationRequest;
@@ -22,6 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserService {
     UserRepository userRepository;
@@ -48,15 +52,27 @@ public class UserService {
         return userMapper.toUserResponse(userRepository.save(user));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public List<UserResponse> getUsers() {
         // return all User in the Database
+        log.info("In method get Users");
         List<User> users =userRepository.findAll();
         return users.stream().map(userMapper::toUserResponse).collect(Collectors.toList());
     }
 
+    @PostAuthorize("returnObject.username == authentication.name")
     public UserResponse getUser(String userId) {
         // get User from DB with userId
+        var authentication = SecurityContextHolder.getContext();
+        log.info("In method get User by Id");
         var user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        return userMapper.toUserResponse(user);
+    }
+
+    public UserResponse getMyInfo(){
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        User user = userRepository.findByUsername(name).orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
         return userMapper.toUserResponse(user);
     }
 

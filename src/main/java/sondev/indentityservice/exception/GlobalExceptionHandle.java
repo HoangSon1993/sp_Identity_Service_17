@@ -12,7 +12,7 @@ public class GlobalExceptionHandle {
     // Bắt lỗi tổng quát nhất: Exception
     @ExceptionHandler(value = Exception.class)
     ResponseEntity<ApiResponse> handlingRuntimeException(Exception exception) {
-        ApiResponse apiResponse = new ApiResponse()
+        ApiResponse apiResponse = ApiResponse
                 .builder()
                 .code(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode())
                 .message(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage())
