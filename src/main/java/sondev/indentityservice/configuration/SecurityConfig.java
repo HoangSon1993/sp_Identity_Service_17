@@ -41,8 +41,9 @@ public class SecurityConfig {
 
         httpSecurity.oauth2ResourceServer(oath2 ->
                 oath2.jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtDeCoder())
-                        .jwtAuthenticationConverter(jwtAuthenticationConverter())
-                ));
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
+        );
 
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
 
@@ -50,7 +51,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    JwtAuthenticationConverter jwtAuthenticationConverter (){
+    JwtAuthenticationConverter jwtAuthenticationConverter() {
 
         JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
         jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
