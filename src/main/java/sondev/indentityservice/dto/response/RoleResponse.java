@@ -2,9 +2,7 @@ package sondev.indentityservice.dto.response;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import sondev.indentityservice.entity.Role;
 
-import java.time.LocalDate;
 import java.util.Set;
 
 @Data
@@ -12,13 +10,10 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserResponse {
-    String username;
-   // String password;
-    String firstName;
-    String lastName;
-    LocalDate dob;
+public class RoleResponse {
+    String name;
+    String description;
+    Set<PermissionResponse> permissions;
 
-    Set<Role> roles;
 
 }

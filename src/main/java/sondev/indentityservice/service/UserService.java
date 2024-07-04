@@ -45,7 +45,7 @@ public class UserService {
         // Create Role Default = USER
         HashSet<String> roles = new HashSet<>();
         roles.add(Role.USER.name());
-        user.setRoles(roles);
+        //user.setRoles(roles);
 
         // Save User into Database
         // Return User was created successful
