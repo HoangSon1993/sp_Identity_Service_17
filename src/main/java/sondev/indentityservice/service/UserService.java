@@ -17,6 +17,7 @@ import sondev.indentityservice.enums.Role;
 import sondev.indentityservice.exception.AppException;
 import sondev.indentityservice.exception.ErrorCode;
 import sondev.indentityservice.mapper.UserMapper;
+import sondev.indentityservice.repository.RoleRepository;
 import sondev.indentityservice.repository.UserRepository;
 
 import java.util.HashSet;
@@ -31,6 +32,7 @@ public class UserService {
     UserRepository userRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
+    RoleRepository roleRepository;
 
     public UserResponse createUser(UserCreationRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -82,6 +84,13 @@ public class UserService {
 
         // map data from UserUpdateRequest to User by UserMapper
         userMapper.updateUser(user, request);
+
+        // Hash password
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        // Update Role
+        var roles = roleRepository.findAllById(request.getRoles());
+        user.setRoles(new HashSet<>(roles));
 
         // Update database: result is a User after Updated Successful
         User result = userRepository.save(user);

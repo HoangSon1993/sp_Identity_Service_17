@@ -9,11 +9,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import sondev.indentityservice.entity.Role;
 import sondev.indentityservice.entity.User;
-import sondev.indentityservice.enums.Role;
+import sondev.indentityservice.repository.RoleRepository;
 import sondev.indentityservice.repository.UserRepository;
 
 import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 @Configuration
 @RequiredArgsConstructor
@@ -28,11 +31,11 @@ public class ApplicationInitConfig {
         return args -> {
             if (userRepository.findByUsername("admin").isEmpty()){
                 var role = new HashSet<String>();
-                role.add(Role.ADMIN.name());
+               // role.add(Role.ADMIN.name());
                 User user = User.builder()
                         .username("admin")
                         .password(passwordEncoder.encode("admin"))
-//                        .roles(role)
+                        //roles(role)
                         .build();
                 userRepository.save(user);
                 log.warn("admin user has been created with default password: admin, please change it");

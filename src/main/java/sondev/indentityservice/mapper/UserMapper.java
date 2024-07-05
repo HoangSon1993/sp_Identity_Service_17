@@ -1,6 +1,7 @@
 package sondev.indentityservice.mapper;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import sondev.indentityservice.dto.request.UserCreationRequest;
 import sondev.indentityservice.dto.request.UserUpdateRequest;
@@ -14,5 +15,6 @@ public interface UserMapper {
 
     UserResponse toUserResponse(User user);
 
+    @Mapping(target = "roles", ignore = true)
     void updateUser(@MappingTarget User user, UserUpdateRequest request);
 }

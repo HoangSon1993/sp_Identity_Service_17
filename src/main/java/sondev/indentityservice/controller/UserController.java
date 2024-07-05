@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import sondev.indentityservice.dto.request.UserCreationRequest;
@@ -33,6 +34,8 @@ public class UserController {
         return apiResponse;
     }
 
+//    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping
     public ApiResponse<List<UserResponse>> getUsers() {
         //Lấy thông tin User đang đăng nhập

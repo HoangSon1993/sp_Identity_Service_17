@@ -44,23 +44,18 @@ public class AuthenticationService {
 
     protected String SIGNER_KEY;
 
-    public AuthenticationResponse authenticate (AuthenticationRequest request){
-        var user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
+    public AuthenticationResponse authenticate(AuthenticationRequest request) {
+        var user = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
-        boolean authenticated = passwordEncoder.matches(request.getPassword(),user.getPassword());
+        boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
 
-        if (!authenticated)
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        if (!authenticated) throw new AppException(ErrorCode.UNAUTHENTICATED);
 
         var token = generatorToken(user);
-        return AuthenticationResponse.builder()
-                .token(token)
-                .authenticated(true)
-                .build();
+        return AuthenticationResponse.builder().token(token).authenticated(true).build();
     }
 
-    public IntrospectResponse introspectResponse (IntrospectRequest request) throws JOSEException, ParseException {
+    public IntrospectResponse introspectResponse(IntrospectRequest request) throws JOSEException, ParseException {
         var token = request.getToken();
 
         JWSVerifier jwsVerifier = new MACVerifier(SIGNER_KEY.getBytes());
@@ -83,12 +78,9 @@ public class AuthenticationService {
                 .build();
 
         // Tạo JWTClaimsSet
-        JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(user.getUsername())
-                .issuer("devteria.com") // Domain
-                .issueTime(new Date())
-                .expirationTime(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli())) // Hết hạn sau 1h
-                .claim("scope",buildScope(user)) // custom ClaimSet
+        JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder().subject(user.getUsername()).issuer("devteria.com") // Domain
+                .issueTime(new Date()).expirationTime(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli())) // Hết hạn sau 1h
+                .claim("scope", buildScope(user)) // custom ClaimSet
                 .build();
 
         // Tạo Payload từ JWTClaimsSet
@@ -110,10 +102,11 @@ public class AuthenticationService {
 
     private String buildScope (User user){
         StringJoiner stringJoiner = new StringJoiner(" ");
-        if(!CollectionUtils.isEmpty(user.getRoles())){
-//            user.getRoles().forEach(s -> stringJoiner.add(s));
-            //user.getRoles().forEach(stringJoiner::add);
-        }
+        if (!CollectionUtils.isEmpty(user.getRoles())) user.getRoles().forEach(role -> {
+            stringJoiner.add("ROLE_" + role.getName());
+            if (!CollectionUtils.isEmpty(role.getPermissions()))
+                role.getPermissions().forEach(permission -> stringJoiner.add(permission.getName()));
+        });
         return stringJoiner.toString();
     }
 }
