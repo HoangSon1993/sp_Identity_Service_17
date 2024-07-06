@@ -3,6 +3,7 @@ package sondev.indentityservice.dto.request;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import sondev.indentityservice.validator.DobConstraint;
 
 import java.time.LocalDate;
 
@@ -20,5 +21,7 @@ public class UserCreationRequest {
 
     String firstName;
     String lastName;
+
+    @DobConstraint(min = 18, message = "INVALID_DOB")
     LocalDate dob;
 }
