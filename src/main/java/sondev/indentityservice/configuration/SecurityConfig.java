@@ -1,5 +1,6 @@
 package sondev.indentityservice.configuration;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,13 +23,12 @@ import javax.crypto.spec.SecretKeySpec;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
+    @Autowired
+    private CustomJwtDecoder customJwtDecoder;
     private final String[] PUBLIC_ENDPOINT = {"/users",
-            "/auth/log-in", "/auth/introspect"};
-
-    @Value("${jwt.signerKey}")
-    private String signerKey;
-
+            "/auth/log-in", "/auth/introspect", "/auth/logout","/auth/refresh"};
+//    @Value("${jwt.signerKey}")
+//    private String signerKey;
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
 
@@ -40,7 +40,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated());
 
         httpSecurity.oauth2ResourceServer(oath2 ->
-                oath2.jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtDeCoder())
+                oath2.jwt(jwtConfigurer -> jwtConfigurer.decoder(customJwtDecoder)
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter()))
                         .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
         );
@@ -62,16 +62,16 @@ public class SecurityConfig {
         return jwtAuthenticationConverter;
     }
 
-    @Bean
-    org.springframework.security.oauth2.jwt.JwtDecoder jwtDeCoder() {
-        SecretKeySpec secretKeySpec = new SecretKeySpec(signerKey.getBytes(), "HmacSHA512");
-        // lưu ý lúc encode: JWSAlgorithm.HS512
-        // decode "HmacSHA512"
-        return NimbusJwtDecoder
-                .withSecretKey(secretKeySpec)
-                .macAlgorithm(MacAlgorithm.HS512)
-                .build();
-    }
+//    @Bean
+//    org.springframework.security.oauth2.jwt.JwtDecoder jwtDeCoder() {
+//        SecretKeySpec secretKeySpec = new SecretKeySpec(signerKey.getBytes(), "HmacSHA512");
+//        // lưu ý lúc encode: JWSAlgorithm.HS512
+//        // decode "HmacSHA512"
+//        return NimbusJwtDecoder
+//                .withSecretKey(secretKeySpec)
+//                .macAlgorithm(MacAlgorithm.HS512)
+//                .build();
+//    }
 
     @Bean
     PasswordEncoder passwordEncoder (){
