@@ -16,11 +16,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import sondev.indentityservice.dto.request.AuthenticationRequest;
 import sondev.indentityservice.dto.request.IntrospectRequest;
+import sondev.indentityservice.dto.request.LogoutRequest;
 import sondev.indentityservice.dto.response.AuthenticationResponse;
 import sondev.indentityservice.dto.response.IntrospectResponse;
+import sondev.indentityservice.entity.InvalidatedToken;
 import sondev.indentityservice.entity.User;
 import sondev.indentityservice.exception.AppException;
 import sondev.indentityservice.exception.ErrorCode;
+import sondev.indentityservice.repository.InvalidatedTokenRepository;
 import sondev.indentityservice.repository.UserRepository;
 
 import java.text.ParseException;
@@ -29,6 +32,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Date;
 import java.util.StringJoiner;
+import java.util.UUID;
 
 import static com.nimbusds.jose.JOSEObjectType.JWT;
 import static org.hibernate.query.sqm.tree.SqmNode.log;
@@ -38,6 +42,7 @@ import static org.hibernate.query.sqm.tree.SqmNode.log;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationService {
     UserRepository userRepository;
+    InvalidatedTokenRepository invalidatedTokenRepository;
 
     @NonFinal
     @Value("${jwt.signerKey}") // Đọc biến từ file application.yaml
@@ -57,6 +62,31 @@ public class AuthenticationService {
 
     public IntrospectResponse introspectResponse(IntrospectRequest request) throws JOSEException, ParseException {
         var token = request.getToken();
+        boolean isValid = true;
+        try {
+            verifyToken(token);
+        } catch (AppException ex) {
+           isValid = false;
+        }
+        return IntrospectResponse.builder()
+                .valid(isValid)
+                .build();
+    }
+
+    public void logout(LogoutRequest request) throws ParseException, JOSEException {
+        var signToken = verifyToken(request.getToken());
+
+        String jit = signToken.getJWTClaimsSet().getJWTID();
+        Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
+
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .id(jit)
+                .expiryTime(expiryTime)
+                .build();
+        invalidatedTokenRepository.save(invalidatedToken);
+    }
+
+    private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
 
         JWSVerifier jwsVerifier = new MACVerifier(SIGNER_KEY.getBytes());
 
@@ -64,14 +94,20 @@ public class AuthenticationService {
 
         Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
 
-       var veryfied = signedJWT.verify(jwsVerifier);
+        var verified = signedJWT.verify(jwsVerifier);
 
-       return IntrospectResponse.builder()
-               .valid(veryfied && expiryTime.after(new Date()))
-               .build();
+        if (!verified && expiryTime.after(new Date())) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        return signedJWT;
     }
 
-    private String generatorToken(User user){
+    private String generatorToken(User user) {
         // Tạo JWSHeader với JWSAlgorithm.HS512 và thêm thuộc tính "typ": "JWT"
         JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.HS512) // có thể sử dụng HS256
                 .type(JWT) // Thêm (Type: JWT)
@@ -80,14 +116,15 @@ public class AuthenticationService {
         // Tạo JWTClaimsSet
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder().subject(user.getUsername()).issuer("devteria.com") // Domain
                 .issueTime(new Date()).expirationTime(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli())) // Hết hạn sau 1h
+                .jwtID(UUID.randomUUID().toString())
                 .claim("scope", buildScope(user)) // custom ClaimSet
                 .build();
 
         // Tạo Payload từ JWTClaimsSet
-        Payload payload  = new Payload(jwtClaimsSet.toJSONObject());
+        Payload payload = new Payload(jwtClaimsSet.toJSONObject());
 
         // Tạo JWSObject với header và payload
-        JWSObject jwsObject = new JWSObject(header,payload);
+        JWSObject jwsObject = new JWSObject(header, payload);
 
         try {
             // Ký JWSObject bằng SIGNER_KEY
@@ -95,12 +132,12 @@ public class AuthenticationService {
             // Trả về token đã được ký và serialize
             return jwsObject.serialize();
         } catch (JOSEException e) {
-            log.error("Cannot create token: ",e);
+            log.error("Cannot create token: ", e);
             throw new RuntimeException(e);
         }
     }
 
-    private String buildScope (User user){
+    private String buildScope(User user) {
         StringJoiner stringJoiner = new StringJoiner(" ");
         if (!CollectionUtils.isEmpty(user.getRoles())) user.getRoles().forEach(role -> {
             stringJoiner.add("ROLE_" + role.getName());

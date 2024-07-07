@@ -7,9 +7,11 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 import sondev.indentityservice.dto.request.AuthenticationRequest;
 import sondev.indentityservice.dto.request.IntrospectRequest;
+import sondev.indentityservice.dto.request.LogoutRequest;
 import sondev.indentityservice.dto.response.ApiResponse;
 import sondev.indentityservice.dto.response.AuthenticationResponse;
 import sondev.indentityservice.dto.response.IntrospectResponse;
+import sondev.indentityservice.repository.InvalidatedTokenRepository;
 import sondev.indentityservice.service.AuthenticationService;
 
 import java.text.ParseException;
@@ -20,6 +22,7 @@ import java.text.ParseException;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthController {
     AuthenticationService authenticationService;
+
 
     @PostMapping("/log-in")
     public ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
@@ -36,5 +39,12 @@ public class AuthController {
         return ApiResponse.<IntrospectResponse>builder()
                 .result(result)
                 .build();
+    }
+
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout(@RequestBody LogoutRequest request) throws ParseException, JOSEException {
+        authenticationService.logout(request);
+        return ApiResponse.<Void>builder().build();
+
     }
 }
