@@ -8,10 +8,10 @@ import org.springframework.web.bind.annotation.*;
 import sondev.indentityservice.dto.request.AuthenticationRequest;
 import sondev.indentityservice.dto.request.IntrospectRequest;
 import sondev.indentityservice.dto.request.LogoutRequest;
+import sondev.indentityservice.dto.request.RefreshRequest;
 import sondev.indentityservice.dto.response.ApiResponse;
 import sondev.indentityservice.dto.response.AuthenticationResponse;
 import sondev.indentityservice.dto.response.IntrospectResponse;
-import sondev.indentityservice.repository.InvalidatedTokenRepository;
 import sondev.indentityservice.service.AuthenticationService;
 
 import java.text.ParseException;
@@ -32,10 +32,19 @@ public class AuthController {
                 .build();
     }
 
+    @PostMapping("/refresh")
+    public ApiResponse<AuthenticationResponse> refreshToken(@RequestBody RefreshRequest request)
+            throws ParseException, JOSEException {
+        var result = authenticationService.refreshToken(request);
+        return ApiResponse.<AuthenticationResponse>builder()
+                .result(result)
+                .build();
+    }
+
     @PostMapping("/introspect")
     public ApiResponse<IntrospectResponse> introspect(@RequestBody IntrospectRequest request)
             throws ParseException, JOSEException {
-        var result = authenticationService.introspectResponse(request);
+        var result = authenticationService.introspect(request);
         return ApiResponse.<IntrospectResponse>builder()
                 .result(result)
                 .build();

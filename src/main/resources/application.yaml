@@ -12,6 +12,8 @@ spring:
     show-sql: true #debug query string SQL
 jwt:
   signerKey: "mH4CblTDofPnUtYvO/xcmbyKFMN/S+B9GD7RCt9i7YdAtqm5DdxefbjMwPNb7E/USYC/MGw1TVeuT9kZ/H6DRYeMp/uBJqIZ5KhnBvoNZpqdfWO/HZeghTPpykryMkTT0dlUgOwfJSFNZI/P0ABxM2rum+u3/hCuYjIveZLy6AG5cafUn1AVX5ZJkJNmOxqe/QR8b9LTrXuzdIOa5jY/gYpLH8dQwwhjw8cLCnICP4g4PSHJIZAcDBthVD0J4IaKK59/0AbZU7LYvy2G8S2mlIcMiVY2fPrFG12fdIh+1ypS1+iFsZEv/rUQnTqPiCRSQYkQPnSZJ7T9rDeIOK81Rw=="
+  valid-duration: 20 #in second
+  refreshable-duration: 120 # in second
 server:
   port: 8080
   servlet:
